@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Capitolia · Editar producto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+      .page-title{display:flex;align-items:center;gap:.6rem;margin:1.25rem 0}
+      .page-title i{font-size:30px}
+      .img-preview{width:140px;height:140px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
+      .previews{display:flex;flex-wrap:wrap;gap:.75rem}
+      .field-note{font-size:.875rem;color:#6c757d}
+      .img-thumb{width:56px;height:56px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
+    </style>
+  </head>
+  <body>
+    <!-- Menú reusable -->
+    <cap-menu></cap-menu>
+
+    <main class="container-fluid px-4">
+      <div class="d-flex justify-content-between align-items-center page-title">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-box"></i>
+          <h1 class="h2 m-0">Editar producto</h1>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" id="btnVerStock" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-warehouse me-2"></i>Ver stock
+          </button>
+          <a href="productos.html" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Volver
+          </a>
+          <button type="button" id="btnGuardar" class="btn btn-success">
+            <i class="fa-solid fa-floppy-disk me-2"></i>Guardar
+          </button>
+        </div>
+      </div>
+
+      <form id="frmProducto" novalidate class="row g-3">
+        <!-- Identificadores -->
+        <div class="col-12 col-md-3">
+          <label for="ProductoID" class="form-label">ProductoID</label>
+          <input type="number" class="form-control" id="ProductoID" name="ProductoID" placeholder="(autonumérico)" readonly>
+          <div class="field-note">Solo lectura</div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label for="Codigo" class="form-label">Código <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="Codigo" name="Codigo" maxlength="50" required>
+          <div class="invalid-feedback">El código es obligatorio (máx. 50).</div>
+        </div>
+
+        <div class="col-12 col-md-5">
+          <label for="Nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="Nombre" name="Nombre" maxlength="100" required>
+          <div class="invalid-feedback">El nombre es obligatorio (máx. 100).</div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="col-12">
+          <label for="Descripcion" class="form-label">Descripción</label>
+          <textarea class="form-control" id="Descripcion" name="Descripcion" rows="4" placeholder="Detalle del producto/servicio..."></textarea>
+        </div>
+
+        <!-- Foto(s) -->
+        <div class="col-12">
+          <label class="form-label">Imagen del producto</label>
+          <div class="d-flex align-items-center gap-2">
+            <label class="btn btn-outline-primary mb-0">
+              <i class="fa-solid fa-image me-2"></i>Subir imágenes
+              <input id="fileFotos" type="file" accept="image/*" multiple hidden>
+            </label>
+            <span class="field-note">Podés seleccionar una o varias. Se muestran abajo.</span>
+          </div>
+          <div id="previewZona" class="previews mt-3"></div>
+        </div>
+
+        <!-- Stocks y flags -->
+        <div class="col-12 col-md-3">
+          <label for="Stock" class="form-label">Stock <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" id="Stock" name="Stock" min="0" required>
+          <div class="invalid-feedback">Stock requerido (mínimo 0).</div>
+        </div>
+
+        <div class="col-12 col-md-3">
+          <label for="StockReservado" class="form-label">Stock reservado <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" id="StockReservado" name="StockReservado" min="0" required>
+          <div class="invalid-feedback">Stock reservado requerido (mínimo 0).</div>
+        </div>
+
+        <div class="col-12 col-md-3 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="EsServicio" name="EsServicio">
+            <label class="form-check-label" for="EsServicio">Es servicio</label>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <!-- Modal: Ver Stock / Movimientos de entrada -->
+    <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="fa-solid fa-warehouse me-2"></i><span id="stockModalTitle">Stock</span></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <img id="stockModalImg" class="img-thumb" alt="Producto">
+              <div>
+                <div class="small text-muted" id="stockModalCodigo"></div>
+                <div class="small text-muted" id="stockModalResumen"></div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th style="width:160px">Fecha</th>
+                    <th>Tipo</th>
+                    <th class="text-end" style="width:160px">Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody id="tblMovimientos"></tbody>
+              </table>
+            </div>
+            <div class="small text-muted">Se muestran solo movimientos de <strong>entrada</strong>.</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="menu.js"></script>
+
+    <script>
+      // ====== DEMO: datos (reemplazar con fetch/SQL real) ======
+      // Movimientos de stock (estructura de tu tabla)
+      const movimientosStock = [
+        // Producto 1001 (ejemplo)
+        { MovimientoID: 11, ProductoID: 1001, Cantidad: 20, TipoMovimiento: 'Entrada', Fecha: '2025-03-01' },
+        { MovimientoID: 12, ProductoID: 1001, Cantidad: 10, TipoMovimiento: 'Salida',  Fecha: '2025-03-05' },
+        { MovimientoID: 13, ProductoID: 1001, Cantidad: 15, TipoMovimiento: 'Entrada', Fecha: '2025-03-10' },
+        // Otro producto
+        { MovimientoID: 21, ProductoID: 1002, Cantidad:  5, TipoMovimiento: 'Entrada', Fecha: '2025-03-08' },
+      ];
+
+      // Placeholder para imagen
+      const IMG_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="100%" height="100%" fill="#f1f3f5"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#adb5bd" font-family="Arial" font-size="9">sin img</text></svg>'
+      );
+
+      // ====== Precarga desde querystring (?id=) ======
+      (function precargarDesdeQS(){
+        const params = new URLSearchParams(location.search);
+        const id = params.get('id');
+        if(!id) return;
+        // Demo: completar form con valores ficticios
+        document.getElementById('ProductoID').value = id;
+        document.getElementById('Codigo').value = 'P-' + (id.padStart ? id.padStart(4,'0') : id);
+        document.getElementById('Nombre').value = 'Producto ' + id;
+        document.getElementById('Descripcion').value = 'Descripción de ejemplo para el producto ' + id;
+        document.getElementById('Stock').value = 25;
+        document.getElementById('StockReservado').value = 5;
+        document.getElementById('EsServicio').checked = false;
+      })();
+
+      // ====== Previsualización de imágenes seleccionadas ======
+      const inputFotos = document.getElementById('fileFotos');
+      const previewZona = document.getElementById('previewZona');
+
+      inputFotos.addEventListener('change', () => {
+        previewZona.innerHTML = '';
+        const files = Array.from(inputFotos.files || []);
+        if (!files.length) return;
+
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            const url = e.target.result;
+            const card = document.createElement('div');
+            card.className = 'd-flex flex-column align-items-center';
+            card.innerHTML = `
+              <img src="${url}" alt="${file.name}" class="img-preview">
+              <div class="small text-muted mt-1 text-truncate" style="max-width:140px">${file.name}</div>
+            `;
+            previewZona.appendChild(card);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      // ====== Guardar (demo) ======
+      const frm = document.getElementById('frmProducto');
+      document.getElementById('btnGuardar').addEventListener('click', async () => {
+        if (!frm.checkValidity()) {
+          frm.classList.add('was-validated');
+          return;
+        }
+        const files = Array.from(inputFotos.files || []);
+        let fotoDataUrl = null;
+        if (files[0]) fotoDataUrl = await fileToDataURL(files[0]);
+
+        const payload = {
+          ProductoID: valueOrNull('ProductoID'),
+          Codigo: document.getElementById('Codigo').value.trim(),
+          Nombre: document.getElementById('Nombre').value.trim(),
+          Descripcion: document.getElementById('Descripcion').value.trim(),
+          Stock: parseInt(document.getElementById('Stock').value, 10) || 0,
+          StockReservado: parseInt(document.getElementById('StockReservado').value, 10) || 0,
+          EsServicio: document.getElementById('EsServicio').checked,
+          FotoDataUrl: fotoDataUrl
+        };
+
+        console.log('Payload listo para enviar:', payload);
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success mt-3';
+        toast.innerHTML = '<i class="fa-solid fa-check me-2"></i>Producto guardado (demo). Revisá consola para ver el payload.';
+        frm.appendChild(toast);
+        setTimeout(()=> toast.remove(), 3000);
+      });
+
+      function valueOrNull(id){
+        const v = document.getElementById(id).value;
+        return v === '' ? null : v;
+      }
+      function fileToDataURL(file){
+        return new Promise(res => {
+          const reader = new FileReader();
+          reader.onload = e => res(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // ====== Ver Stock: abrir modal con movimientos de ENTRADA ======
+      const stockModal = new bootstrap.Modal('#stockModal');
+      document.getElementById('btnVerStock').addEventListener('click', abrirModalStock);
+
+      function abrirModalStock(){
+        const nombre = document.getElementById('Nombre').value || '(sin nombre)';
+        const codigo = document.getElementById('Codigo').value || '(sin código)';
+        const productoId = parseInt(document.getElementById('ProductoID').value||'0',10) || 1001; // demo fallback
+        const stock = parseInt(document.getElementById('Stock').value||'0',10);
+        const reservado = parseInt(document.getElementById('StockReservado').value||'0',10);
+
+        document.getElementById('stockModalTitle').textContent = nombre;
+        document.getElementById('stockModalCodigo').textContent = `Código: ${codigo}`;
+        document.getElementById('stockModalResumen').textContent = `Stock: ${stock} · Reservado: ${reservado}`;
+        document.getElementById('stockModalImg').src = IMG_PLACEHOLDER;
+
+        const entradas = movimientosStock
+          .filter(m => m.ProductoID === productoId && String(m.TipoMovimiento).toLowerCase() === 'entrada')
+          .sort((a,b)=> new Date(b.Fecha) - new Date(a.Fecha));
+
+        const tbody = document.getElementById('tblMovimientos');
+        if(!entradas.length){
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Sin movimientos de entrada</td></tr>';
+        } else {
+          tbody.innerHTML = entradas.map(m => `
+            <tr>
+              <td>${new Date(m.Fecha).toLocaleDateString('es-AR')}</td>
+              <td>${m.TipoMovimiento}</td>
+              <td class="text-end"><strong>${m.Cantidad}</strong></td>
+            </tr>
+          `).join('');
+        }
+        stockModal.show();
+      }
+    </script>
+  </body>
+</html>

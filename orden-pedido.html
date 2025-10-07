@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Capitolia · Orden de Pedido</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+      .page-title{display:flex;align-items:center;gap:.6rem;margin:1.25rem 0}
+      .page-title i{font-size:30px}
+      .table td,.table th{vertical-align:middle}
+      .img-thumb{width:72px;height:72px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
+      .img-preview{width:120px;height:120px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
+      .field-note{font-size:.875rem;color:#6c757d}
+    </style>
+  </head>
+  <body>
+    <!-- Menú reusable -->
+    <cap-menu></cap-menu>
+
+    <main class="container-fluid px-4">
+      <div class="page-title">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <h1 class="h2 m-0">Orden de Pedido</h1>
+      </div>
+
+      <!-- ===== Encabezado ===== -->
+      <form id="frmOP" class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+          <label for="OrdenPedidoID" class="form-label">OrdenPedidoID</label>
+          <input type="number" id="OrdenPedidoID" class="form-control" placeholder="(autonumérico)" readonly>
+          <div class="field-note">Solo lectura</div>
+        </div>
+        <div class="col-12 col-md-5">
+          <label for="NotaEnvioID" class="form-label">Nota de Envío</label>
+          <div class="input-group">
+            <input id="NotaEnvioID" class="form-control" placeholder="ID de Nota de Envío" required>
+            <button class="btn btn-outline-primary" type="button" id="btnCargarNota">
+              <i class="fa-solid fa-download me-1"></i>Cargar detalle
+            </button>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="Fecha" class="form-label">Fecha</label>
+          <input type="date" id="Fecha" class="form-control" required>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end gap-2">
+          <a href="ordenes-pedido.html" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-2"></i>Volver
+          </a>
+          <button type="button" id="btnGuardarOP" class="btn btn-success">
+            <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Orden
+          </button>
+        </div>
+      </form>
+
+      <!-- ===== Detalle (Productos) ===== -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 m-0"><i class="fa-solid fa-boxes-stacked me-2"></i>Productos de la orden</h2>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary" id="btnImportarDeNota">
+            <i class="fa-solid fa-file-import me-2"></i>Importar de Nota
+          </button>
+          <button class="btn btn-primary" id="btnAgregar">
+            <i class="fa-solid fa-plus me-2"></i>Agregar producto
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="border-top">
+            <tr>
+              <th style="width:90px">Foto</th>
+              <th style="width:160px">Código</th>
+              <th>Producto</th>
+              <th style="width:140px" class="text-end">Cantidad</th>
+              <th style="width:220px" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div id="lblInfo" class="text-muted small"></div>
+      </div>
+    </main>
+
+    <!-- ===== Modal Agregar/Editar Item ===== -->
+    <div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="itemModalTitle">Agregar producto</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <form id="frmItem" class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="selProducto" class="form-label">Producto</label>
+                <select id="selProducto" class="form-select" required>
+                  <option value="">Seleccione…</option>
+                </select>
+                <div class="invalid-feedback">Seleccioná un producto.</div>
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="inpCantidad" class="form-label">Cantidad</label>
+                <input type="number" id="inpCantidad" class="form-control" min="1" required>
+                <div class="invalid-feedback">Ingresá una cantidad válida.</div>
+              </div>
+              <div class="col-12 col-md-3 d-flex align-items-end">
+                <div class="field-note">Stock visible al seleccionar</div>
+              </div>
+              <div class="col-12 d-flex align-items-center gap-3">
+                <img id="imgProducto" class="img-preview" alt="Foto del producto">
+                <div>
+                  <div class="field-note m-0" id="lblCodigo"></div>
+                  <div class="field-note m-0" id="lblStock"></div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-success" id="btnGuardarItem">
+              <i class="fa-solid fa-check me-2"></i>Guardar ítem
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="menu.js"></script>
+    <script>
+      // ===== Datos DEMO =====
+      // Productos
+      const productos = [
+        { id: 101, codigo:'P-1001', nombre:'Caja de herramientas', stock:85, reservado:10, img:null },
+        { id: 102, codigo:'P-1002', nombre:'Mantenimiento mensual', stock:0,  reservado:0,  img:null },
+        { id: 103, codigo:'P-1003', nombre:'Lámpara LED 50W',     stock:200,reservado:25, img:null },
+        { id: 104, codigo:'P-1004', nombre:'Instalación eléctrica',stock:0,  reservado:0,  img:null },
+      ];
+      // Notas de Envío demo (para importación)
+      const notasEnvio = [
+        { id: 10001, fecha: '2025-03-10', contactoId: 1, detalle:[
+          { productoId:101, cantidad:3 }, { productoId:103, cantidad:2 }
+        ]},
+        { id: 10002, fecha: '2025-03-15', contactoId: 2, detalle:[
+          { productoId:102, cantidad:1 }, { productoId:104, cantidad:4 }
+        ]},
+      ];
+      const IMG_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#f1f3f5"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#adb5bd" font-family="Arial" font-size="12">sin imagen</text></svg>'
+      );
+
+      // ===== Estado =====
+      const qs = new URLSearchParams(location.search);
+      const initialNotaId = parseInt(qs.get('notaId')||'0',10);
+      const detalles = []; // líneas editables de la OP
+      const $ = (sel)=>document.querySelector(sel);
+      const $$ = (sel)=>document.querySelectorAll(sel);
+      function byId(id){ return document.getElementById(id); }
+      function getProducto(pid){ return productos.find(p=>p.id===pid); }
+      function productImg(p){ return p?.img || IMG_PLACEHOLDER; }
+
+      // ===== Inicial =====
+      byId('Fecha').valueAsDate = new Date();
+      if(initialNotaId){
+        byId('NotaEnvioID').value = initialNotaId;
+        importarDesdeNota(initialNotaId);
+      }
+
+      // ===== Render detalle =====
+      const body = byId('tblBody');
+      const lblInfo = byId('lblInfo');
+
+      function renderDetalle(){
+        if(!detalles.length){
+          body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Sin productos cargados</td></tr>';
+          lblInfo.textContent = '';
+          return;
+        }
+        body.innerHTML = detalles.map(d=>{
+          const p = getProducto(d.productoId);
+          return `
+            <tr>
+              <td><img src="${productImg(p)}" class="img-thumb" alt="${p?.nombre||''}"></td>
+              <td><strong>${p?.codigo||''}</strong></td>
+              <td>${p?.nombre||''}</td>
+              <td class="text-end">${d.cantidad}</td>
+              <td class="text-end">
+                <button class="btn btn-outline-success me-1" data-action="edit" data-id="${d.idTemp}" data-bs-toggle="tooltip" title="Modificar ítem">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="btn btn-outline-danger" data-action="del" data-id="${d.idTemp}" data-bs-toggle="tooltip" title="Eliminar ítem">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+        $$('[data-bs-toggle="tooltip"]').forEach(el=> new bootstrap.Tooltip(el));
+        lblInfo.textContent = `Total ítems: ${detalles.length}`;
+      }
+
+      // ===== Importar desde Nota de Envío =====
+      function importarDesdeNota(notaId){
+        const nota = notasEnvio.find(n=>n.id===Number(notaId));
+        if(!nota){
+          alert('No se encontró la Nota de Envío ' + notaId);
+          return;
+        }
+        detalles.length = 0;
+        nota.detalle.forEach(l => {
+          detalles.push({ idTemp: Date.now()+Math.random(), productoId: l.productoId, cantidad: l.cantidad });
+        });
+        renderDetalle();
+      }
+
+      byId('btnCargarNota').addEventListener('click', ()=>{
+        const id = parseInt(byId('NotaEnvioID').value||'0',10);
+        if(!id){ alert('Ingresá un ID de Nota de Envío.'); return; }
+        importarDesdeNota(id);
+      });
+
+      byId('btnImportarDeNota').addEventListener('click', ()=>{
+        const id = parseInt(byId('NotaEnvioID').value||'0',10);
+        if(!id){ alert('Indicá primero la Nota de Envío en el encabezado.'); return; }
+        importarDesdeNota(id);
+      });
+
+      // ===== Modal Agregar/Editar =====
+      const itemModal = new bootstrap.Modal('#itemModal');
+      let editId = null;
+
+      function fillProductos(){
+        const sel = byId('selProducto');
+        sel.innerHTML = '<option value="">Seleccione…</option>' +
+          productos.map(p=>`<option value="${p.id}">${p.codigo} — ${p.nombre}</option>`).join('');
+      }
+      fillProductos();
+
+      function resetItemForm(){
+        byId('frmItem').classList.remove('was-validated');
+        byId('selProducto').value = '';
+        byId('inpCantidad').value = '';
+        byId('imgProducto').src = IMG_PLACEHOLDER;
+        byId('lblCodigo').textContent = '';
+        byId('lblStock').textContent = '';
+      }
+
+      byId('btnAgregar').addEventListener('click', ()=>{
+        editId = null;
+        resetItemForm();
+        byId('itemModalTitle').textContent = 'Agregar producto';
+        itemModal.show();
+      });
+
+      body.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const id = btn.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+        if(action === 'edit'){
+          const d = detalles.find(x=>String(x.idTemp)===String(id));
+          if(!d) return;
+          editId = d.idTemp;
+          resetItemForm();
+          byId('itemModalTitle').textContent = 'Modificar producto';
+          byId('selProducto').value = d.productoId;
+          const p = getProducto(d.productoId);
+          byId('imgProducto').src = productImg(p);
+          byId('lblCodigo').textContent = p ? `Código: ${p.codigo}` : '';
+          byId('lblStock').textContent  = p ? `Stock: ${p.stock}  ·  Reservado: ${p.reservado}` : '';
+          byId('inpCantidad').value = d.cantidad;
+          itemModal.show();
+        } else if(action === 'del'){
+          if(confirm('¿Eliminar este ítem?')){
+            const idx = detalles.findIndex(x=>String(x.idTemp)===String(id));
+            if(idx>=0){ detalles.splice(idx,1); renderDetalle(); }
+          }
+        }
+      });
+
+      byId('selProducto').addEventListener('change', ()=>{
+        const pid = parseInt(byId('selProducto').value||'0',10);
+        const p = getProducto(pid);
+        byId('imgProducto').src = productImg(p);
+        byId('lblCodigo').textContent = p ? `Código: ${p.codigo}` : '';
+        byId('lblStock').textContent  = p ? `Stock: ${p.stock}  ·  Reservado: ${p.reservado}` : '';
+      });
+
+      byId('btnGuardarItem').addEventListener('click', ()=>{
+        const form = byId('frmItem');
+        if(!form.checkValidity()){
+          form.classList.add('was-validated');
+          return;
+        }
+        const pid = parseInt(byId('selProducto').value,10);
+        const cant = parseInt(byId('inpCantidad').value,10);
+        if(!pid || !cant || cant<=0) return;
+
+        if(editId == null){
+          detalles.push({ idTemp: Date.now()+Math.random(), productoId: pid, cantidad: cant });
+        } else {
+          const d = detalles.find(x=>x.idTemp===editId);
+          if(d){ d.productoId = pid; d.cantidad = cant; }
+        }
+        itemModal.hide();
+        renderDetalle();
+      });
+
+      // ===== Guardar Orden de Pedido (demo) =====
+      byId('btnGuardarOP').addEventListener('click', ()=>{
+        const frm = byId('frmOP');
+        if(!frm.checkValidity()){ frm.classList.add('was-validated'); return; }
+        const payload = {
+          OrdenPedidoID: byId('OrdenPedidoID').value || null,
+          NotaEnvioID:   byId('NotaEnvioID').value ? parseInt(byId('NotaEnvioID').value,10) : null,
+          Fecha:         byId('Fecha').value,
+          Detalle:       detalles.map(d=>({ ProductoID: d.productoId, Cantidad: d.cantidad }))
+        };
+        console.log('Guardar Orden de Pedido (demo):', payload);
+        const ok = document.createElement('div');
+        ok.className = 'alert alert-success mt-3';
+        ok.innerHTML = '<i class="fa-solid fa-check me-2"></i>Orden guardada (demo). Revisá consola para ver el payload.';
+        frm.appendChild(ok);
+        setTimeout(()=> ok.remove(), 3000);
+      });
+    </script>
+  </body>
+</html>

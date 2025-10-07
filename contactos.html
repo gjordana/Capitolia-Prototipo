@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Capitolia · Contactos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+      .page-title{display:flex;align-items:center;gap:.6rem;margin:1.25rem 0}
+      .page-title i{font-size:30px}
+      .toolbar{display:flex;gap:.75rem;align-items:center;justify-content:flex-end}
+      .btn-icon{display:inline-flex;align-items:center;gap:.5rem}
+      .btn-teal{background:#11b6c6;color:#fff;border-color:#11b6c6}
+      .btn-teal:hover{filter:brightness(0.95);color:#fff}
+      .table thead th{font-weight:700}
+      .table td,.table th{vertical-align:middle}
+      .actions .btn{padding:.45rem .6rem}
+      .search-box{max-width:420px}
+      .page-size{width:110px}
+      .pagination .page-link{border-radius:.4rem}
+      .inactive-check{white-space:nowrap}
+      .badge-pill { border-radius: 10rem; padding:.35rem .6rem; }
+    </style>
+  </head>
+  <body>
+    <!-- Menú reusable como Web Component -->
+    <cap-menu></cap-menu>
+
+    <main class="container-fluid px-4">
+      <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+        <div class="page-title">
+          <i class="fa-solid fa-address-book"></i>
+          <h1 class="h2 m-0">Contactos</h1>
+        </div>
+        <div class="toolbar">
+          <input id="txtBuscar" class="form-control search-box" type="text" placeholder="buscar por contacto, cliente o dirección…">
+          <select id="selFiltroCompra" class="form-select w-auto" title="Filtrar por tipo de compra">
+            <option value="todos" selected>Todos</option>
+            <option value="productos">Sólo productos</option>
+            <option value="servicios">Sólo servicios</option>
+            <option value="ambos">Productos y servicios</option>
+            <option value="ninguno">Ninguno</option>
+          </select>
+          <button class="btn btn-primary btn-icon" id="btnNuevo"><i class="fa-solid fa-plus"></i>Nuevo</button>
+          <button class="btn btn-teal btn-icon" id="btnExportar"><i class="fa-solid fa-file-export"></i>Exportar</button>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center mb-2">
+        <label for="selPageSize" class="me-2">Mostrar</label>
+        <select id="selPageSize" class="form-select page-size me-2">
+          <option>10</option><option selected>25</option><option>50</option><option>100</option>
+        </select>
+        <span>registros por página</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="border-top">
+            <tr>
+              <th style="width:260px">Nombre contacto</th>
+              <th style="width:260px">Cliente</th>
+              <th>Dirección</th>
+              <th style="width:170px">Compra productos</th>
+              <th style="width:170px">Compra servicios</th>
+              <th style="width:180px" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div id="lblInfo" class="text-muted small"></div>
+        <nav>
+          <ul id="paginacion" class="pagination m-0"></ul>
+        </nav>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Menú reusable sin módulos (funciona con file://) -->
+    <script src="menu.js"></script>
+
+    <script>
+      // ===== Datos demo (reemplazar con fetch a tu API/BD) =====
+      // Estructura basada en Contactos + Clientes (JOIN por ClienteID) y campos CompraProductos/CompraServicios.
+      const contactos = [
+        { id: 1, nombre: 'Ana Pérez', cliente: 'Distribuidora Sur', direccion: 'Av. Siempreviva 742', compraProductos: true,  compraServicios: false },
+        { id: 2, nombre: 'Luis Gómez', cliente: 'Techno SA',        direccion: 'Maipú 1100, Piso 3',  compraProductos: true,  compraServicios: true  },
+        { id: 3, nombre: 'María López', cliente: 'AgroCampo',       direccion: 'RN9 Km 115, Lote 12', compraProductos: false, compraServicios: true  },
+        { id: 4, nombre: 'Juan Díaz',   cliente: 'AgroCampo',       direccion: 'Sarmiento 350',       compraProductos: false, compraServicios: false },
+        { id: 5, nombre: 'Carla Neri',  cliente: 'Luminaria SRL',   direccion: 'Belgrano 220',        compraProductos: true,  compraServicios: true  }
+      ];
+
+      // ===== Estado/UI =====
+      let pageSize = 25, page = 1, filtro = "", filtroCompra = "todos";
+      const body = document.getElementById('tblBody');
+      const lblInfo = document.getElementById('lblInfo');
+      const ul = document.getElementById('paginacion');
+
+      // ===== Utilidades =====
+      function matchCompra(c){
+        if(filtroCompra === 'productos') return c.compraProductos && !c.compraServicios;
+        if(filtroCompra === 'servicios') return !c.compraProductos && c.compraServicios;
+        if(filtroCompra === 'ambos')     return c.compraProductos && c.compraServicios;
+        if(filtroCompra === 'ninguno')   return !c.compraProductos && !c.compraServicios;
+        return true; // todos
+      }
+
+      function filtrarDatos() {
+        const f = filtro.trim().toLowerCase();
+        return contactos
+          .filter(c => matchCompra(c))
+          .filter(c =>
+            c.nombre.toLowerCase().includes(f) ||
+            c.cliente.toLowerCase().includes(f) ||
+            c.direccion.toLowerCase().includes(f)
+          );
+      }
+
+      function chip(bool){
+        return bool
+          ? '<span class="badge text-bg-success badge-pill"><i class="fa-solid fa-check me-1"></i> Sí</span>'
+          : '<span class="badge text-bg-secondary badge-pill"><i class="fa-solid fa-minus me-1"></i> No</span>';
+      }
+
+      function render() {
+        const datos = filtrarDatos();
+        const total = datos.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if(page > totalPages) page = totalPages;
+        const start = (page-1)*pageSize;
+        const slice = datos.slice(start, start + pageSize);
+
+        body.innerHTML = slice.map(c => `
+          <tr>
+            <td><strong>${c.nombre}</strong></td>
+            <td>${c.cliente}</td>
+            <td>${c.direccion}</td>
+            <td>${chip(c.compraProductos)}</td>
+            <td>${chip(c.compraServicios)}</td>
+            <td class="text-end actions">
+              <button class="btn btn-teal" title="Ver"><i class="fa-solid fa-eye"></i></button>
+              <button class="btn btn-warning text-white" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button class="btn btn-danger" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+        lblInfo.textContent = `Mostrando página ${page} de ${totalPages} (Filtrados ${total} registros)`;
+
+        // paginación
+        ul.innerHTML = "";
+        const addItem = (text, disabled, active, onClick) => {
+          const li = document.createElement('li');
+          li.className = `page-item ${disabled?'disabled':''} ${active?'active':''}`;
+          li.innerHTML = `<a class="page-link" href="#">${text}</a>`;
+          li.addEventListener('click', e => { e.preventDefault(); if(!disabled){ onClick(); }});
+          ul.appendChild(li);
+        };
+        addItem("Anterior", page===1, false, ()=>{ page--; render(); });
+        for(let i=1;i<=totalPages;i++){
+          if (i===1 || i===totalPages || Math.abs(i-page)<=1){
+            addItem(String(i), false, i===page, ()=>{ page=i; render(); });
+          } else if (i===2 && page>3 || i===totalPages-1 && page<totalPages-2){
+            const li = document.createElement('li');
+            li.className = "page-item disabled";
+            li.innerHTML = '<span class="page-link">…</span>';
+            ul.appendChild(li);
+          }
+        }
+        addItem("Siguiente", page===totalPages, false, ()=>{ page++; render(); });
+      }
+
+      // ===== Eventos =====
+      document.getElementById('txtBuscar').addEventListener('input', e=>{ filtro=e.target.value; page=1; render(); });
+      document.getElementById('selPageSize').addEventListener('change', e=>{ pageSize=parseInt(e.target.value,10); page=1; render(); });
+      document.getElementById('selFiltroCompra').addEventListener('change', e=>{ filtroCompra=e.target.value; page=1; render(); });
+
+      // Inicial
+      render();
+    </script>
+  </body>
+</html>

@@ -57,7 +57,7 @@
               <th>Dirección</th>
               <th style="width:180px">Zona</th>
               <th style="width:160px" class="text-center">Cant. productos</th>
-              <th style="width:180px" class="text-end">Acciones</th>
+              <th style="width:240px" class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody id="tblBody"></tbody>
@@ -116,19 +116,22 @@
             <td>${o.zona}</td>
             <td class="text-center"><strong>${o.cantidad}</strong></td>
             <td class="text-end actions">
-
-                <a href="orden-pedido.html" class="btn btn-primary me-1" 
-                    data-bs-toggle="tooltip" title="Ver detalle">
-                    <i class="fa-solid fa-eye"></i>
-                </a>
-                <a href="orden-pedido.html" class="btn btn-warning me-1 text-dark" 
-                    data-bs-toggle="tooltip" title="Editar registro">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                </a>
-                <a href="orden-pedido.html" class="btn btn-danger" 
-                    data-bs-toggle="tooltip" title="Eliminar registro">
-                    <i class="fa-solid fa-trash"></i>
-                </a>
+              <a href="#" class="btn btn-outline-dark me-1"
+                data-bs-toggle="tooltip" title="Imprimir orden de pedido">
+                <i class="fa-solid fa-print"></i>
+              </a>
+              <a href="orden-pedido.html" class="btn btn-outline-success me-1" 
+                  data-bs-toggle="tooltip" title="Ver detalle">
+                  <i class="fa-solid fa-eye"></i>
+              </a>
+              <a href="orden-pedido.html" class="btn btn-outline-warning me-1 text-dark" 
+                  data-bs-toggle="tooltip" title="Editar registro">
+                  <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+              <a href="orden-pedido.html" class="btn btn-outline-danger" 
+                  data-bs-toggle="tooltip" title="Eliminar registro">
+                  <i class="fa-solid fa-trash"></i>
+              </a>
             </td>
           </tr>
         `).join('');

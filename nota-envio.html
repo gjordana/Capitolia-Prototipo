@@ -48,6 +48,9 @@
           <a href="notas-envio.html" class="btn btn-outline-secondary">
             <i class="fa-solid fa-arrow-left me-2"></i>Volver
           </a>
+          <button type="button" id="btnImprimir" class="btn btn-outline-dark no-print">
+            <i class="fa-solid fa-print me-2"></i>Imprimir
+          </button>
           <button type="button" id="btnGuardarNota" class="btn btn-success">
             <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Nota
           </button>
@@ -311,6 +314,7 @@
         frm.appendChild(ok);
         setTimeout(()=> ok.remove(), 3000);
       });
+      byId('btnImprimir').addEventListener('click', ()=> window.print());
     </script>
   </body>
 </html>

@@ -142,9 +142,18 @@
             <td>${chip(c.compraProductos)}</td>
             <td>${chip(c.compraServicios)}</td>
             <td class="text-end actions">
-              <button class="btn btn-teal" title="Ver"><i class="fa-solid fa-eye"></i></button>
-              <button class="btn btn-warning text-white" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-              <button class="btn btn-danger" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+              <a href="contacto.html" class="btn btn-outline-success me-1" 
+                  data-bs-toggle="tooltip" title="Ver detalle">
+                  <i class="fa-solid fa-eye"></i>
+              </a>
+              <a href="contacto.html" class="btn btn-outline-warning me-1 text-dark" 
+                  data-bs-toggle="tooltip" title="Editar registro">
+                  <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+              <a href="contacto.html" class="btn btn-outline-danger" 
+                  data-bs-toggle="tooltip" title="Eliminar registro">
+                  <i class="fa-solid fa-trash"></i>
+              </a>
             </td>
           </tr>
         `).join('');

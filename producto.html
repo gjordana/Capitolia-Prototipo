@@ -24,8 +24,11 @@
     .table-wrap{overflow:auto}
   </style>
 </head>
-<body class="bg-light">
-  <div class="container py-3">
+<body>
+  <!-- Menú reusable -->
+  <cap-menu></cap-menu>
+
+  <main class="container-fluid px-4 py-3">
 
     <!-- Título -->
     <div class="page-title">
@@ -33,7 +36,7 @@
       <h1 class="h4 m-0">Editar producto</h1>
     </div>
 
-    <!-- Datos del producto (NO se tocan) -->
+    <!-- Datos del producto -->
     <div class="card mb-3">
       <div class="card-body">
         <div class="row g-3 align-items-center">
@@ -61,7 +64,7 @@
               </div>
               <div class="col-md-3">
                 <label class="form-label">Stock actual</label>
-                <input type="number" class="form-control" value="87" readonly>
+                <input id="stockActual" type="number" class="form-control" value="87" readonly>
               </div>
               <div class="col-12">
                 <label class="form-label">Descripción</label>
@@ -73,13 +76,13 @@
       </div>
       <div class="sticky-actions">
         <div class="d-flex justify-content-end gap-2">
-          <button class="btn btn-outline-secondary"><i class="fa-regular fa-circle-xmark me-1"></i>Cancelar</button>
+          <a href="productos.html" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i>Volver</a>
           <button class="btn btn-primary"><i class="fa-regular fa-floppy-disk me-1"></i>Guardar</button>
         </div>
       </div>
     </div>
 
-    <!-- Consulta de Stock (debajo de datos del producto) -->
+    <!-- Movimientos de Stock -->
     <div class="card">
       <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <div class="d-flex align-items-center gap-2">
@@ -100,7 +103,7 @@
       </div>
 
       <div class="card-body pt-3">
-        <!-- Filtros de tipo -->
+        <!-- Filtros -->
         <ul class="nav nav-pills filter-pills mb-3 gap-2">
           <li class="nav-item">
             <button class="nav-link active" data-filter="all">Todos</button>
@@ -142,28 +145,74 @@
           </nav>
         </div>
 
-        <!-- Leyenda de tipos -->
+        <!-- Leyenda -->
         <div class="mt-3 small">
           <span class="me-3"><span class="badge badge-in me-1">Ingreso a depósito</span> Entrada</span>
           <span class="me-3"><span class="badge badge-in me-1">Compras</span> Entrada</span>
           <span class="me-3"><span class="badge badge-out me-1">Órdenes de Pedido</span> Salida</span>
         </div>
+
+        <!-- Botón Ajuste de Stock (al final) -->
+        <div class="d-flex justify-content-end mt-3">
+          <button id="btnAjusteStock" class="btn btn-warning">
+            <i class="fa-solid fa-scale-balanced me-1"></i>Ajuste de Stock
+          </button>
+        </div>
       </div>
     </div>
 
+  </main>
+
+  <!-- Modal: Ajuste de Stock -->
+  <div class="modal fade" id="ajusteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="frmAjuste" class="modal-content needs-validation" novalidate>
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa-solid fa-scale-balanced me-2"></i>Ajuste de Stock</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="ajFecha" class="form-label">Fecha</label>
+            <input type="datetime-local" id="ajFecha" class="form-control" required>
+            <div class="invalid-feedback">Indicá una fecha válida.</div>
+          </div>
+          <div class="mb-3">
+            <label for="ajCantidad" class="form-label">Cantidad</label>
+            <input type="number" id="ajCantidad" class="form-control" step="1" required>
+            <div class="form-text">Usá valores positivos para entrada y negativos para salida.</div>
+            <div class="invalid-feedback">Ingresá una cantidad.</div>
+          </div>
+          <div class="mb-2">
+            <label for="ajDesc" class="form-label">Descripción</label>
+            <textarea id="ajDesc" class="form-control" rows="2" placeholder="Motivo del ajuste…" required></textarea>
+            <div class="invalid-feedback">Ingresá una descripción.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-success" type="submit"><i class="fa-solid fa-check me-1"></i>Guardar ajuste</button>
+        </div>
+      </form>
+    </div>
   </div>
 
+  <!-- Cargar Bootstrap JS ANTES del script que usa 'bootstrap' -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Menú script -->
+  <script src="menu.js"></script>
+
+  <!-- Script principal -->
   <script>
     // === Configuración ===
-    const PRODUCTO_ID = 123; // Ejemplo. Si tenés el ID en el DOM, leelo de ahí.
+    const PRODUCTO_ID = 123; // Ejemplo: reemplazá por el ID real si lo tenés.
 
-    // TIPOS que vamos a manejar:
+    // TIPOS
     const TIPO_INGRESO_DEPOSITO = "Ingreso a depósito";
     const TIPO_COMPRAS = "Compras";
     const TIPO_ORDEN_PEDIDO = "Órdenes de Pedido"; // Salida
 
-    // === Datos de ejemplo (reemplazar por fetch a tu API si ya la tenés) ===
-    // Estructura según tu tabla MovimientosStock: {MovimientoID, ProductoID, Cantidad, TipoMovimiento, Fecha, Observacion?}
+    // === Datos de ejemplo (reemplazá por fetch a tu API si corresponde) ===
     const movimientosData = [
       { MovimientoID: 1009, ProductoID: PRODUCTO_ID, Cantidad: 12,  TipoMovimiento: TIPO_COMPRAS,          Fecha: "2025-10-06T17:10:00", Observacion: "OC-8457" },
       { MovimientoID: 1008, ProductoID: PRODUCTO_ID, Cantidad: 5,   TipoMovimiento: TIPO_INGRESO_DEPOSITO, Fecha: "2025-10-06T09:23:00", Observacion: "Ajuste inventario" },
@@ -176,25 +225,9 @@
       { MovimientoID: 1001, ProductoID: PRODUCTO_ID, Cantidad: 2,   TipoMovimiento: TIPO_ORDEN_PEDIDO,     Fecha: "2025-09-27T10:11:00", Observacion: "OP-2177" },
     ];
 
-    // === Si tenés API, descomentá y ajustá (manteniendo orden DESC en servidor) ===
-    /*
-    async function fetchMovimientos(page, pageSize, filter, search) {
-      const params = new URLSearchParams({
-        productoId: PRODUCTO_ID,
-        page: page,
-        pageSize: pageSize,
-        sort: "fecha_desc",
-        filter: filter,  // "all" | "entradas" | "salidas"
-        search: search ?? ""
-      });
-      const resp = await fetch(`/api/movimientos-stock?${params.toString()}`);
-      return await resp.json(); // {items:[], total:123}
-    }
-    */
-
     // === Estado de UI ===
     const state = {
-      raw: movimientosData.slice(), // copia
+      raw: movimientosData.slice(),
       filtered: [],
       filter: "all", // all | entradas | salidas
       search: "",
@@ -206,7 +239,6 @@
     function asDate(dstr){ return new Date(dstr); }
     function fmtDate(dstr){
       const d = asDate(dstr);
-      // DD/MM/YYYY HH:mm
       const pad = n => String(n).padStart(2,"0");
       return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
@@ -229,7 +261,6 @@
     }
 
     function applyFilters(){
-      // 1) filtrar por tipo
       let arr = state.raw.filter(x => x.ProductoID === PRODUCTO_ID);
 
       if (state.filter === "entradas") {
@@ -237,21 +268,16 @@
       } else if (state.filter === "salidas") {
         arr = arr.filter(x => isSalida(x.TipoMovimiento));
       } else {
-        // all: mostrar solo los tipos definidos (evita ruidos de otros movimientos)
         arr = arr.filter(x => isEntrada(x.TipoMovimiento) || isSalida(x.TipoMovimiento));
       }
 
-      // 2) búsqueda por texto en tipo
       const t = state.search.trim().toLowerCase();
       if (t.length > 0) {
         arr = arr.filter(x => (x.TipoMovimiento || "").toLowerCase().includes(t));
       }
 
-      // 3) ordenar por fecha desc (más nuevo → más viejo)
       arr.sort((a,b) => asDate(b.Fecha) - asDate(a.Fecha));
-
       state.filtered = arr;
-      // corregir página si quedó fuera de rango
       const totalPages = Math.max(1, Math.ceil(arr.length / state.pageSize));
       if (state.page > totalPages) state.page = totalPages;
     }
@@ -275,7 +301,6 @@
         tbody.appendChild(tr);
       }
 
-      // Rango + Pager
       const rangeInfo = document.getElementById("rangeInfo");
       rangeInfo.textContent = state.filtered.length === 0
         ? "Mostrando 0–0 de 0"
@@ -285,7 +310,6 @@
       const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
       pageIndicator.textContent = `${state.page} / ${totalPages}`;
 
-      // Habilitar/Deshabilitar prev/next
       const pager = document.getElementById("pager");
       const prevItem = pager.querySelector('[data-page="prev"]').closest(".page-item");
       const nextItem = pager.querySelector('[data-page="next"]').closest(".page-item");
@@ -298,33 +322,78 @@
       renderTable();
     }
 
+    // === Ajuste de Stock ===
+    const ajusteModal = new bootstrap.Modal('#ajusteModal');
+
+    document.getElementById('btnAjusteStock').addEventListener('click', ()=>{
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const local = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      document.getElementById('ajFecha').value = local;
+      document.getElementById('ajCantidad').value = '';
+      document.getElementById('ajDesc').value = '';
+      document.getElementById('frmAjuste').classList.remove('was-validated');
+      ajusteModal.show();
+    });
+
+    document.getElementById('frmAjuste').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const form = e.currentTarget;
+      if(!form.checkValidity()){
+        form.classList.add('was-validated');
+        return;
+      }
+
+      const fechaStr = document.getElementById('ajFecha').value;
+      const cantidad = parseInt(document.getElementById('ajCantidad').value, 10);
+      const desc = document.getElementById('ajDesc').value.trim();
+
+      const tipo = (cantidad < 0) ? TIPO_ORDEN_PEDIDO : TIPO_INGRESO_DEPOSITO;
+
+      const nextId = (state.raw.reduce((max,m)=>Math.max(max, m.MovimientoID), 1000) + 1);
+      const isoFecha = new Date(fechaStr).toISOString();
+
+      state.raw.push({
+        MovimientoID: nextId,
+        ProductoID: PRODUCTO_ID,
+        Cantidad: Math.abs(cantidad),
+        TipoMovimiento: tipo,
+        Fecha: isoFecha,
+        Observacion: desc ? `Ajuste: ${desc}` : "Ajuste de stock"
+      });
+
+      // Actualizar stock actual (visual)
+      const stockInput = document.getElementById('stockActual');
+      const current = parseInt(stockInput.value || "0", 10);
+      stockInput.value = current + cantidad;
+
+      render();
+      ajusteModal.hide();
+    });
+
     // === Eventos UI ===
-    // Filtros (píldoras)
     document.querySelectorAll(".filter-pills .nav-link").forEach(btn=>{
-      btn.addEventListener("click", (e)=>{
+      btn.addEventListener("click", ()=>{
         document.querySelectorAll(".filter-pills .nav-link").forEach(x=>x.classList.remove("active"));
         btn.classList.add("active");
-        state.filter = btn.dataset.filter; // all | entradas | salidas
+        state.filter = btn.dataset.filter;
         state.page = 1;
         render();
       });
     });
 
-    // Búsqueda
     document.getElementById("searchText").addEventListener("input", (e)=>{
       state.search = e.target.value || "";
       state.page = 1;
       render();
     });
 
-    // Tamaño de página
     document.getElementById("pageSize").addEventListener("change", (e)=>{
       state.pageSize = parseInt(e.target.value, 10) || 10;
       state.page = 1;
       render();
     });
 
-    // Paginación
     document.getElementById("pager").addEventListener("click", (e)=>{
       const a = e.target.closest(".page-link");
       if (!a) return;
@@ -341,10 +410,7 @@
     });
 
     // === Init ===
-    // Si usás API, podrías cargar acá y luego setear state.raw = data.items; render();
     render();
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

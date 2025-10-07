@@ -1,278 +1,350 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Capitolia · Editar producto</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <style>
-      .page-title{display:flex;align-items:center;gap:.6rem;margin:1.25rem 0}
-      .page-title i{font-size:30px}
-      .img-preview{width:140px;height:140px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
-      .previews{display:flex;flex-wrap:wrap;gap:.75rem}
-      .field-note{font-size:.875rem;color:#6c757d}
-      .img-thumb{width:56px;height:56px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
-    </style>
-  </head>
-  <body>
-    <!-- Menú reusable -->
-    <cap-menu></cap-menu>
+<head>
+  <meta charset="utf-8">
+  <title>Capitolia · Producto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap / Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <style>
+    .page-title{display:flex;align-items:center;gap:.6rem;margin:1.25rem 0}
+    .page-title i{font-size:28px}
+    .img-preview{width:140px;height:140px;object-fit:cover;border-radius:.5rem;border:1px solid rgba(0,0,0,.1)}
+    .field-note{font-size:.875rem;color:#6c757d}
+    .badge-in{background:#e7f5ef;color:#0f5132;border:1px solid #a3cfbb}
+    .badge-out{background:#fde7ea;color:#842029;border:1px solid #f1aeb5}
+    .qty-in{color:#198754;font-weight:600}
+    .qty-out{color:#dc3545;font-weight:600}
+    .table thead th{white-space:nowrap}
+    .sticky-actions{position:sticky;bottom:0;background:#fff;border-top:1px solid rgba(0,0,0,.075);padding:.75rem}
+    .pagination .page-link{cursor:pointer}
+    .filter-pills .nav-link{border:1px solid rgba(0,0,0,.125)}
+    .filter-pills .nav-link.active{background:#0d6efd;border-color:#0d6efd}
+    .table-wrap{overflow:auto}
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-3">
 
-    <main class="container-fluid px-4">
-      <div class="d-flex justify-content-between align-items-center page-title">
-        <div class="d-flex align-items-center gap-2">
-          <i class="fa-solid fa-box"></i>
-          <h1 class="h2 m-0">Editar producto</h1>
-        </div>
-        <div class="d-flex gap-2">
-          <button type="button" id="btnVerStock" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-warehouse me-2"></i>Ver stock
-          </button>
-          <a href="productos.html" class="btn btn-outline-secondary">
-            <i class="fa-solid fa-arrow-left me-2"></i>Volver
-          </a>
-          <button type="button" id="btnGuardar" class="btn btn-success">
-            <i class="fa-solid fa-floppy-disk me-2"></i>Guardar
-          </button>
-        </div>
-      </div>
+    <!-- Título -->
+    <div class="page-title">
+      <i class="fa-solid fa-box-open text-primary"></i>
+      <h1 class="h4 m-0">Editar producto</h1>
+    </div>
 
-      <form id="frmProducto" novalidate class="row g-3">
-        <!-- Identificadores -->
-        <div class="col-12 col-md-3">
-          <label for="ProductoID" class="form-label">ProductoID</label>
-          <input type="number" class="form-control" id="ProductoID" name="ProductoID" placeholder="(autonumérico)" readonly>
-          <div class="field-note">Solo lectura</div>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <label for="Codigo" class="form-label">Código <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="Codigo" name="Codigo" maxlength="50" required>
-          <div class="invalid-feedback">El código es obligatorio (máx. 50).</div>
-        </div>
-
-        <div class="col-12 col-md-5">
-          <label for="Nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="Nombre" name="Nombre" maxlength="100" required>
-          <div class="invalid-feedback">El nombre es obligatorio (máx. 100).</div>
-        </div>
-
-        <!-- Descripción -->
-        <div class="col-12">
-          <label for="Descripcion" class="form-label">Descripción</label>
-          <textarea class="form-control" id="Descripcion" name="Descripcion" rows="4" placeholder="Detalle del producto/servicio..."></textarea>
-        </div>
-
-        <!-- Foto(s) -->
-        <div class="col-12">
-          <label class="form-label">Imagen del producto</label>
-          <div class="d-flex align-items-center gap-2">
-            <label class="btn btn-outline-primary mb-0">
-              <i class="fa-solid fa-image me-2"></i>Subir imágenes
-              <input id="fileFotos" type="file" accept="image/*" multiple hidden>
-            </label>
-            <span class="field-note">Podés seleccionar una o varias. Se muestran abajo.</span>
+    <!-- Datos del producto (NO se tocan) -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-3 text-center">
+            <img src="https://via.placeholder.com/280x280.png?text=Producto" class="img-preview" alt="Foto del producto">
+            <div class="field-note mt-2">Imagen referencial</div>
           </div>
-          <div id="previewZona" class="previews mt-3"></div>
-        </div>
-
-        <!-- Stocks y flags -->
-        <div class="col-12 col-md-3">
-          <label for="Stock" class="form-label">Stock <span class="text-danger">*</span></label>
-          <input type="number" class="form-control" id="Stock" name="Stock" min="0" required>
-          <div class="invalid-feedback">Stock requerido (mínimo 0).</div>
-        </div>
-
-        <div class="col-12 col-md-3">
-          <label for="StockReservado" class="form-label">Stock reservado <span class="text-danger">*</span></label>
-          <input type="number" class="form-control" id="StockReservado" name="StockReservado" min="0" required>
-          <div class="invalid-feedback">Stock reservado requerido (mínimo 0).</div>
-        </div>
-
-        <div class="col-12 col-md-3 d-flex align-items-end">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="EsServicio" name="EsServicio">
-            <label class="form-check-label" for="EsServicio">Es servicio</label>
-          </div>
-        </div>
-      </form>
-    </main>
-
-    <!-- Modal: Ver Stock / Movimientos de entrada -->
-    <div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"><i class="fa-solid fa-warehouse me-2"></i><span id="stockModalTitle">Stock</span></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <img id="stockModalImg" class="img-thumb" alt="Producto">
-              <div>
-                <div class="small text-muted" id="stockModalCodigo"></div>
-                <div class="small text-muted" id="stockModalResumen"></div>
+          <div class="col-md-9">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Código</label>
+                <input type="text" class="form-control" value="PRD-000123" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-control" value="Producto de ejemplo">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Categoría</label>
+                <input type="text" class="form-control" value="Almacén">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Precio</label>
+                <input type="number" class="form-control" value="1299.99" step="0.01">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Stock actual</label>
+                <input type="number" class="form-control" value="87" readonly>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Descripción</label>
+                <textarea class="form-control" rows="2">Descripción corta del producto…</textarea>
               </div>
             </div>
-
-            <div class="table-responsive">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th style="width:160px">Fecha</th>
-                    <th>Tipo</th>
-                    <th class="text-end" style="width:160px">Cantidad</th>
-                  </tr>
-                </thead>
-                <tbody id="tblMovimientos"></tbody>
-              </table>
-            </div>
-            <div class="small text-muted">Se muestran solo movimientos de <strong>entrada</strong>.</div>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-          </div>
+        </div>
+      </div>
+      <div class="sticky-actions">
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-outline-secondary"><i class="fa-regular fa-circle-xmark me-1"></i>Cancelar</button>
+          <button class="btn btn-primary"><i class="fa-regular fa-floppy-disk me-1"></i>Guardar</button>
         </div>
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="menu.js"></script>
+    <!-- Consulta de Stock (debajo de datos del producto) -->
+    <div class="card">
+      <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-clipboard-list text-secondary"></i>
+          <span class="fw-semibold">Movimientos de Stock</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input id="searchText" type="text" class="form-control" placeholder="Buscar por tipo…">
+          </div>
+          <select id="pageSize" class="form-select form-select-sm" style="width:120px">
+            <option value="10" selected>10 / pág.</option>
+            <option value="25">25 / pág.</option>
+            <option value="50">50 / pág.</option>
+          </select>
+        </div>
+      </div>
 
-    <script>
-      // ====== DEMO: datos (reemplazar con fetch/SQL real) ======
-      // Movimientos de stock (estructura de tu tabla)
-      const movimientosStock = [
-        // Producto 1001 (ejemplo)
-        { MovimientoID: 11, ProductoID: 1001, Cantidad: 20, TipoMovimiento: 'Entrada', Fecha: '2025-03-01' },
-        { MovimientoID: 12, ProductoID: 1001, Cantidad: 10, TipoMovimiento: 'Salida',  Fecha: '2025-03-05' },
-        { MovimientoID: 13, ProductoID: 1001, Cantidad: 15, TipoMovimiento: 'Entrada', Fecha: '2025-03-10' },
-        // Otro producto
-        { MovimientoID: 21, ProductoID: 1002, Cantidad:  5, TipoMovimiento: 'Entrada', Fecha: '2025-03-08' },
-      ];
+      <div class="card-body pt-3">
+        <!-- Filtros de tipo -->
+        <ul class="nav nav-pills filter-pills mb-3 gap-2">
+          <li class="nav-item">
+            <button class="nav-link active" data-filter="all">Todos</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-filter="entradas">Entradas</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-filter="salidas">Salidas</button>
+          </li>
+          <li class="nav-item ms-auto">
+            <span class="badge rounded-pill text-bg-light border"><i class="fa-regular fa-clock me-1"></i>Orden: más nuevo → más viejo</span>
+          </li>
+        </ul>
 
-      // Placeholder para imagen
-      const IMG_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="100%" height="100%" fill="#f1f3f5"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#adb5bd" font-family="Arial" font-size="9">sin img</text></svg>'
-      );
+        <div class="table-wrap">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="width: 140px;">Fecha</th>
+                <th style="width: 180px;">Tipo</th>
+                <th style="width: 120px;" class="text-end">Cantidad</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyMovs"></tbody>
+          </table>
+        </div>
 
-      // ====== Precarga desde querystring (?id=) ======
-      (function precargarDesdeQS(){
-        const params = new URLSearchParams(location.search);
-        const id = params.get('id');
-        if(!id) return;
-        // Demo: completar form con valores ficticios
-        document.getElementById('ProductoID').value = id;
-        document.getElementById('Codigo').value = 'P-' + (id.padStart ? id.padStart(4,'0') : id);
-        document.getElementById('Nombre').value = 'Producto ' + id;
-        document.getElementById('Descripcion').value = 'Descripción de ejemplo para el producto ' + id;
-        document.getElementById('Stock').value = 25;
-        document.getElementById('StockReservado').value = 5;
-        document.getElementById('EsServicio').checked = false;
-      })();
+        <!-- Paginación -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 gap-2">
+          <div class="small text-muted" id="rangeInfo">Mostrando 0–0 de 0</div>
+          <nav>
+            <ul class="pagination pagination-sm mb-0" id="pager">
+              <li class="page-item"><a class="page-link" data-page="prev">«</a></li>
+              <li class="page-item disabled"><span class="page-link" id="pageIndicator">1 / 1</span></li>
+              <li class="page-item"><a class="page-link" data-page="next">»</a></li>
+            </ul>
+          </nav>
+        </div>
 
-      // ====== Previsualización de imágenes seleccionadas ======
-      const inputFotos = document.getElementById('fileFotos');
-      const previewZona = document.getElementById('previewZona');
+        <!-- Leyenda de tipos -->
+        <div class="mt-3 small">
+          <span class="me-3"><span class="badge badge-in me-1">Ingreso a depósito</span> Entrada</span>
+          <span class="me-3"><span class="badge badge-in me-1">Compras</span> Entrada</span>
+          <span class="me-3"><span class="badge badge-out me-1">Órdenes de Pedido</span> Salida</span>
+        </div>
+      </div>
+    </div>
 
-      inputFotos.addEventListener('change', () => {
-        previewZona.innerHTML = '';
-        const files = Array.from(inputFotos.files || []);
-        if (!files.length) return;
+  </div>
 
-        files.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = e => {
-            const url = e.target.result;
-            const card = document.createElement('div');
-            card.className = 'd-flex flex-column align-items-center';
-            card.innerHTML = `
-              <img src="${url}" alt="${file.name}" class="img-preview">
-              <div class="small text-muted mt-1 text-truncate" style="max-width:140px">${file.name}</div>
-            `;
-            previewZona.appendChild(card);
-          };
-          reader.readAsDataURL(file);
-        });
+  <script>
+    // === Configuración ===
+    const PRODUCTO_ID = 123; // Ejemplo. Si tenés el ID en el DOM, leelo de ahí.
+
+    // TIPOS que vamos a manejar:
+    const TIPO_INGRESO_DEPOSITO = "Ingreso a depósito";
+    const TIPO_COMPRAS = "Compras";
+    const TIPO_ORDEN_PEDIDO = "Órdenes de Pedido"; // Salida
+
+    // === Datos de ejemplo (reemplazar por fetch a tu API si ya la tenés) ===
+    // Estructura según tu tabla MovimientosStock: {MovimientoID, ProductoID, Cantidad, TipoMovimiento, Fecha, Observacion?}
+    const movimientosData = [
+      { MovimientoID: 1009, ProductoID: PRODUCTO_ID, Cantidad: 12,  TipoMovimiento: TIPO_COMPRAS,          Fecha: "2025-10-06T17:10:00", Observacion: "OC-8457" },
+      { MovimientoID: 1008, ProductoID: PRODUCTO_ID, Cantidad: 5,   TipoMovimiento: TIPO_INGRESO_DEPOSITO, Fecha: "2025-10-06T09:23:00", Observacion: "Ajuste inventario" },
+      { MovimientoID: 1007, ProductoID: PRODUCTO_ID, Cantidad: 7,   TipoMovimiento: TIPO_ORDEN_PEDIDO,     Fecha: "2025-10-05T19:40:00", Observacion: "OP-2219" },
+      { MovimientoID: 1006, ProductoID: PRODUCTO_ID, Cantidad: 20,  TipoMovimiento: TIPO_COMPRAS,          Fecha: "2025-10-03T14:02:00", Observacion: "OC-8421" },
+      { MovimientoID: 1005, ProductoID: PRODUCTO_ID, Cantidad: 3,   TipoMovimiento: TIPO_ORDEN_PEDIDO,     Fecha: "2025-10-02T09:00:00", Observacion: "OP-2201" },
+      { MovimientoID: 1004, ProductoID: PRODUCTO_ID, Cantidad: 10,  TipoMovimiento: TIPO_INGRESO_DEPOSITO, Fecha: "2025-10-01T16:15:00", Observacion: "Devolución interna" },
+      { MovimientoID: 1003, ProductoID: PRODUCTO_ID, Cantidad: 8,   TipoMovimiento: TIPO_COMPRAS,          Fecha: "2025-09-29T11:05:00", Observacion: "OC-8399" },
+      { MovimientoID: 1002, ProductoID: PRODUCTO_ID, Cantidad: 6,   TipoMovimiento: TIPO_ORDEN_PEDIDO,     Fecha: "2025-09-28T18:30:00", Observacion: "OP-2188" },
+      { MovimientoID: 1001, ProductoID: PRODUCTO_ID, Cantidad: 2,   TipoMovimiento: TIPO_ORDEN_PEDIDO,     Fecha: "2025-09-27T10:11:00", Observacion: "OP-2177" },
+    ];
+
+    // === Si tenés API, descomentá y ajustá (manteniendo orden DESC en servidor) ===
+    /*
+    async function fetchMovimientos(page, pageSize, filter, search) {
+      const params = new URLSearchParams({
+        productoId: PRODUCTO_ID,
+        page: page,
+        pageSize: pageSize,
+        sort: "fecha_desc",
+        filter: filter,  // "all" | "entradas" | "salidas"
+        search: search ?? ""
       });
+      const resp = await fetch(`/api/movimientos-stock?${params.toString()}`);
+      return await resp.json(); // {items:[], total:123}
+    }
+    */
 
-      // ====== Guardar (demo) ======
-      const frm = document.getElementById('frmProducto');
-      document.getElementById('btnGuardar').addEventListener('click', async () => {
-        if (!frm.checkValidity()) {
-          frm.classList.add('was-validated');
-          return;
-        }
-        const files = Array.from(inputFotos.files || []);
-        let fotoDataUrl = null;
-        if (files[0]) fotoDataUrl = await fileToDataURL(files[0]);
+    // === Estado de UI ===
+    const state = {
+      raw: movimientosData.slice(), // copia
+      filtered: [],
+      filter: "all", // all | entradas | salidas
+      search: "",
+      page: 1,
+      pageSize: 10
+    };
 
-        const payload = {
-          ProductoID: valueOrNull('ProductoID'),
-          Codigo: document.getElementById('Codigo').value.trim(),
-          Nombre: document.getElementById('Nombre').value.trim(),
-          Descripcion: document.getElementById('Descripcion').value.trim(),
-          Stock: parseInt(document.getElementById('Stock').value, 10) || 0,
-          StockReservado: parseInt(document.getElementById('StockReservado').value, 10) || 0,
-          EsServicio: document.getElementById('EsServicio').checked,
-          FotoDataUrl: fotoDataUrl
-        };
+    // === Helpers ===
+    function asDate(dstr){ return new Date(dstr); }
+    function fmtDate(dstr){
+      const d = asDate(dstr);
+      // DD/MM/YYYY HH:mm
+      const pad = n => String(n).padStart(2,"0");
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function isEntrada(tipo){
+      return tipo === TIPO_INGRESO_DEPOSITO || tipo === TIPO_COMPRAS;
+    }
+    function isSalida(tipo){
+      return tipo === TIPO_ORDEN_PEDIDO;
+    }
+    function badgeFor(tipo){
+      const isOut = isSalida(tipo);
+      const cls = isOut ? "badge-out" : "badge-in";
+      return `<span class="badge ${cls}">${tipo}</span>`;
+    }
+    function qtyHtml(m){
+      const out = isSalida(m.TipoMovimiento);
+      const sign = out ? "-" : "+";
+      const cls = out ? "qty-out" : "qty-in";
+      return `<span class="${cls}">${sign}${m.Cantidad}</span>`;
+    }
 
-        console.log('Payload listo para enviar:', payload);
-        const toast = document.createElement('div');
-        toast.className = 'alert alert-success mt-3';
-        toast.innerHTML = '<i class="fa-solid fa-check me-2"></i>Producto guardado (demo). Revisá consola para ver el payload.';
-        frm.appendChild(toast);
-        setTimeout(()=> toast.remove(), 3000);
+    function applyFilters(){
+      // 1) filtrar por tipo
+      let arr = state.raw.filter(x => x.ProductoID === PRODUCTO_ID);
+
+      if (state.filter === "entradas") {
+        arr = arr.filter(x => isEntrada(x.TipoMovimiento));
+      } else if (state.filter === "salidas") {
+        arr = arr.filter(x => isSalida(x.TipoMovimiento));
+      } else {
+        // all: mostrar solo los tipos definidos (evita ruidos de otros movimientos)
+        arr = arr.filter(x => isEntrada(x.TipoMovimiento) || isSalida(x.TipoMovimiento));
+      }
+
+      // 2) búsqueda por texto en tipo
+      const t = state.search.trim().toLowerCase();
+      if (t.length > 0) {
+        arr = arr.filter(x => (x.TipoMovimiento || "").toLowerCase().includes(t));
+      }
+
+      // 3) ordenar por fecha desc (más nuevo → más viejo)
+      arr.sort((a,b) => asDate(b.Fecha) - asDate(a.Fecha));
+
+      state.filtered = arr;
+      // corregir página si quedó fuera de rango
+      const totalPages = Math.max(1, Math.ceil(arr.length / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+    }
+
+    function renderTable(){
+      const tbody = document.getElementById("tbodyMovs");
+      tbody.innerHTML = "";
+
+      const startIdx = (state.page - 1) * state.pageSize;
+      const endIdx = Math.min(startIdx + state.pageSize, state.filtered.length);
+      const pageItems = state.filtered.slice(startIdx, endIdx);
+
+      for (const m of pageItems){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fmtDate(m.Fecha)}</td>
+          <td>${badgeFor(m.TipoMovimiento)}</td>
+          <td class="text-end">${qtyHtml(m)}</td>
+          <td>${m.Observacion ? m.Observacion : ""}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // Rango + Pager
+      const rangeInfo = document.getElementById("rangeInfo");
+      rangeInfo.textContent = state.filtered.length === 0
+        ? "Mostrando 0–0 de 0"
+        : `Mostrando ${startIdx + 1}–${endIdx} de ${state.filtered.length}`;
+
+      const pageIndicator = document.getElementById("pageIndicator");
+      const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+      pageIndicator.textContent = `${state.page} / ${totalPages}`;
+
+      // Habilitar/Deshabilitar prev/next
+      const pager = document.getElementById("pager");
+      const prevItem = pager.querySelector('[data-page="prev"]').closest(".page-item");
+      const nextItem = pager.querySelector('[data-page="next"]').closest(".page-item");
+      prevItem.classList.toggle("disabled", state.page <= 1);
+      nextItem.classList.toggle("disabled", state.page >= totalPages);
+    }
+
+    function render(){
+      applyFilters();
+      renderTable();
+    }
+
+    // === Eventos UI ===
+    // Filtros (píldoras)
+    document.querySelectorAll(".filter-pills .nav-link").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        document.querySelectorAll(".filter-pills .nav-link").forEach(x=>x.classList.remove("active"));
+        btn.classList.add("active");
+        state.filter = btn.dataset.filter; // all | entradas | salidas
+        state.page = 1;
+        render();
       });
+    });
 
-      function valueOrNull(id){
-        const v = document.getElementById(id).value;
-        return v === '' ? null : v;
+    // Búsqueda
+    document.getElementById("searchText").addEventListener("input", (e)=>{
+      state.search = e.target.value || "";
+      state.page = 1;
+      render();
+    });
+
+    // Tamaño de página
+    document.getElementById("pageSize").addEventListener("change", (e)=>{
+      state.pageSize = parseInt(e.target.value, 10) || 10;
+      state.page = 1;
+      render();
+    });
+
+    // Paginación
+    document.getElementById("pager").addEventListener("click", (e)=>{
+      const a = e.target.closest(".page-link");
+      if (!a) return;
+      const action = a.dataset.page;
+      if (!action) return;
+
+      const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+      if (action === "prev" && state.page > 1) {
+        state.page--;
+      } else if (action === "next" && state.page < totalPages) {
+        state.page++;
       }
-      function fileToDataURL(file){
-        return new Promise(res => {
-          const reader = new FileReader();
-          reader.onload = e => res(e.target.result);
-          reader.readAsDataURL(file);
-        });
-      }
+      renderTable();
+    });
 
-      // ====== Ver Stock: abrir modal con movimientos de ENTRADA ======
-      const stockModal = new bootstrap.Modal('#stockModal');
-      document.getElementById('btnVerStock').addEventListener('click', abrirModalStock);
+    // === Init ===
+    // Si usás API, podrías cargar acá y luego setear state.raw = data.items; render();
+    render();
+  </script>
 
-      function abrirModalStock(){
-        const nombre = document.getElementById('Nombre').value || '(sin nombre)';
-        const codigo = document.getElementById('Codigo').value || '(sin código)';
-        const productoId = parseInt(document.getElementById('ProductoID').value||'0',10) || 1001; // demo fallback
-        const stock = parseInt(document.getElementById('Stock').value||'0',10);
-        const reservado = parseInt(document.getElementById('StockReservado').value||'0',10);
-
-        document.getElementById('stockModalTitle').textContent = nombre;
-        document.getElementById('stockModalCodigo').textContent = `Código: ${codigo}`;
-        document.getElementById('stockModalResumen').textContent = `Stock: ${stock} · Reservado: ${reservado}`;
-        document.getElementById('stockModalImg').src = IMG_PLACEHOLDER;
-
-        const entradas = movimientosStock
-          .filter(m => m.ProductoID === productoId && String(m.TipoMovimiento).toLowerCase() === 'entrada')
-          .sort((a,b)=> new Date(b.Fecha) - new Date(a.Fecha));
-
-        const tbody = document.getElementById('tblMovimientos');
-        if(!entradas.length){
-          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Sin movimientos de entrada</td></tr>';
-        } else {
-          tbody.innerHTML = entradas.map(m => `
-            <tr>
-              <td>${new Date(m.Fecha).toLocaleDateString('es-AR')}</td>
-              <td>${m.TipoMovimiento}</td>
-              <td class="text-end"><strong>${m.Cantidad}</strong></td>
-            </tr>
-          `).join('');
-        }
-        stockModal.show();
-      }
-    </script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>
